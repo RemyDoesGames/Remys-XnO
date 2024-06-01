@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -18,21 +19,26 @@ public class UIManager : MonoBehaviour
 
     private VisualElement uiRoot;
 
-    private AudioSource audioSource;
+    private bool settingsClicked;
 
     Button _playbutton;
     Button _resumeButton;
     Button _backButton;
     Button _pauseButton;
-    List<Button> _restartButton;
-    List<Button> _settingsButton;
-    List<Button> _mainMenuButton;
+    Button _restartButton1;
+    Button _restartButton2;
+    Button _settingsButton1;
+    Button _settingsButton2;
+    Button _settingsButton3;
+    Button _mainMenuButton1;
+    Button _mainMenuButton2;
 
     Toggle _musicToggle;
 
     Label statusText;
     Label circleWinsText;
     Label crossWinsText;
+    Label winnerText;
 
     VisualElement _mainMenuUI;
     VisualElement _gameOverUI;
@@ -57,14 +63,19 @@ public class UIManager : MonoBehaviour
         statusText = uiRoot.Q<Label>("GameStatusText");
         circleWinsText = uiRoot.Q<Label>("CounterCircle");
         crossWinsText = uiRoot.Q<Label>("CounterCross");
+        winnerText = uiRoot.Q<Label>("Winner");
 
         _playbutton = uiRoot.Q<Button>("PlayButton");
         _pauseButton = uiRoot.Q<Button>("PauseButton");
         _resumeButton = uiRoot.Q<Button>("ResumeButton");
         _backButton = uiRoot.Q<Button>("BackButton");
-        _restartButton = new List<Button>(uiRoot.Query<Button>("RestartButton").ToList());
-        _settingsButton = new List<Button>(uiRoot.Query<Button>("SettingsButton").ToList());
-        _mainMenuButton = new List<Button>(uiRoot.Query<Button>("MainMenuButton").ToList());
+        _restartButton1 = uiRoot.Q<Button>("RestartButton1");
+        _restartButton2 = uiRoot.Q<Button>("RestartButton2");
+        _settingsButton1 = uiRoot.Q<Button>("SettingsButton1");
+        _settingsButton2 = uiRoot.Q<Button>("SettingsButton2");
+        _settingsButton3 = uiRoot.Q<Button>("SettingsButton3");
+        _mainMenuButton1 = uiRoot.Q<Button>("MainMenuButton1");
+        _mainMenuButton2 = uiRoot.Q<Button>("MainMenuButton2");
 
         _musicToggle = uiRoot.Q<Toggle>("MusicToggle");
 
@@ -72,26 +83,15 @@ public class UIManager : MonoBehaviour
         _pauseButton.RegisterCallback<ClickEvent>(OnPauseButtonClicked);
         _resumeButton.RegisterCallback<ClickEvent>(OnResumeButtonClicked);
         _backButton.RegisterCallback<ClickEvent>(OnBackButtonClicked);
-
-        foreach (var button in _restartButton)
-        {
-            button.RegisterCallback<ClickEvent>(OnRestartButtonClicked);
-        }
-        foreach (var button in _settingsButton)
-        {
-            button.RegisterCallback<ClickEvent>(OnSettingsButtonClicked);
-        }
-        foreach (var button in _mainMenuButton)
-        {
-            button.RegisterCallback<ClickEvent>(OnMainMenuButtonClicked);
-        }
+        _restartButton1.RegisterCallback<ClickEvent>(OnRestartButtonClicked);
+        _restartButton2.RegisterCallback<ClickEvent>(OnRestartButtonClicked);
+        _settingsButton1.RegisterCallback<ClickEvent>(OnSettingsButtonClicked);
+        _settingsButton2.RegisterCallback<ClickEvent>(OnSettingsButtonClicked);
+        _settingsButton3.RegisterCallback<ClickEvent>(OnSettingsButtonClicked);
+        _mainMenuButton1.RegisterCallback<ClickEvent>(OnMainMenuButtonClicked);
+        _mainMenuButton2.RegisterCallback<ClickEvent>(OnMainMenuButtonClicked);
 
         _musicToggle.RegisterCallback<ChangeEvent<bool>>(OnMusicToggle);
-    }
-
-    private void Start()
-    {
-        audioSource = GameObject.Find("AudioManager").GetComponent<AudioSource>();
     }
 
     void Update()
@@ -132,7 +132,15 @@ public class UIManager : MonoBehaviour
         switch (GM.currentGameState)
         {
             case GameManager.GameState.GameOver:
-                ChangeDisplay(_gameOverUI);
+                winnerText.text = GM.gameWinner;
+                if (settingsClicked == true)
+                {
+                    ChangeDisplay(_settingsUI);
+                }
+                else if (settingsClicked == false)
+                {
+                    ChangeDisplay(_gameOverUI);
+                }
                 break;
 
             default:
@@ -173,8 +181,11 @@ public class UIManager : MonoBehaviour
     }
     private void OnSettingsButtonClicked(ClickEvent evt)
     {
+        if (GM.currentGameState == GameManager.GameState.GameOver)
+        {
+            settingsClicked = true;
+        }
         ChangeDisplay(_settingsUI);
-        GM.Setttings();
     }
     private void OnBackButtonClicked(ClickEvent evt)
     {
@@ -182,9 +193,10 @@ public class UIManager : MonoBehaviour
         {
             ChangeDisplay(_mainMenuUI);
         }
-        if (GM.currentGameState == GameManager.GameState.OnGoingGame)
+        if (GM.currentGameState == GameManager.GameState.GameOver)
         {
-            ChangeDisplay(_gui);
+            settingsClicked = false;
+            ChangeDisplay(_gameOverUI);
         }
         if (GM.currentGameState == GameManager.GameState.PausedGame)
         {

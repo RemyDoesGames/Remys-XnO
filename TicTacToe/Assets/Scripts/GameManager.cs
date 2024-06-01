@@ -33,6 +33,8 @@ public class GameManager : MonoBehaviour
 
     private float timer;
 
+    public string gameWinner = "";
+
     private PostProcessVolume blur;
 
     public RoundStatus currentRoundStatus;
@@ -62,6 +64,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        
         switch (currentGameState)
         {
             case GameState.MainMenu:
@@ -104,9 +107,11 @@ public class GameManager : MonoBehaviour
             
             case GameState.GameOver:
                 audioManager.FadeVolume(0.3f);
-                GameStart();
-                MainCameraAnimator.SetInteger("Phase", 2);
-                blur.enabled = false;
+                if (WaitTimer(2))
+                {
+                    MainCameraAnimator.SetInteger("Phase", 2);
+                    blur.enabled = false;
+                }
                 break;
         }
 
@@ -118,6 +123,7 @@ public class GameManager : MonoBehaviour
         if (round == 5)
         {
             currentGameState = GameState.GameOver;
+            gameWinner = CheckGameWinner();
         }
     }
 
@@ -193,6 +199,26 @@ public class GameManager : MonoBehaviour
                (field[2].CompareTag(symbol) && field[4].CompareTag(symbol) && field[6].CompareTag(symbol));
     }
 
+    private string CheckGameWinner()
+    {
+        if (crossWins > circleWins)
+        {
+            return "Winner: Player 1";
+        }
+        if (circleWins > crossWins)
+        {
+            return "Winner: Player 2";
+        }
+        if (crossWins == circleWins)
+        {
+            return "It Is A Tie";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
     public void SpawnPlayer(Vector3 dropOffset, Vector3 position)
     {
         if (playerPrefab.Length == 0)
@@ -212,7 +238,7 @@ public class GameManager : MonoBehaviour
 
     public void StartRound()
     {
-        ResetPlayers(); 
+        ResetPlayers();
         SetTurn();
         ResetFields();
         currentGameState = GameState.OnGoingGame; 
@@ -225,11 +251,6 @@ public class GameManager : MonoBehaviour
         circleWins = 0;
         crossWins = 0;
         currentGameState = GameState.StandbyGame;
-    }
-
-    public void Setttings()
-    {
-
     }
 
     public void MainMenu()
@@ -250,7 +271,6 @@ public class GameManager : MonoBehaviour
 
     private bool WaitTimer(float sec)
     {
-        Debug.Log(timer);
         timer += Time.deltaTime;
         if (timer > sec)
         {

@@ -1066,6 +1066,7 @@ MonoBehaviour:
   playerTurnIndex: 0
   circleWins: 0
   crossWins: 0
+  gameWinner: 
   currentRoundStatus: 0
   currentGameState: 0
   field:
@@ -1081,6 +1082,7 @@ MonoBehaviour:
   playerPrefab:
   - {fileID: 7288362658740428242, guid: 9a6e5da5e62d9ee4fbacc44e73b60b14, type: 3}
   - {fileID: 15170131045556650, guid: 0688d1264cf68f540a62cb52cf1f043f, type: 3}
+  musicMuted: 0
 --- !u!4 &782054951
 Transform:
   m_ObjectHideFlags: 0
