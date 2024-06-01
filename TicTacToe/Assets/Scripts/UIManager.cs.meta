@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 55e0a1591503a9e4f96e28e9f310e4c2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - uiAsset: {fileID: 9197481963319205126, guid: 46c2e79914688df43a86e111783308de, type: 3}
+  - panelSettings: {fileID: 11400000, guid: b62cfc3f38868cf4d81984708d0abb57, type: 2}
+  - styleSheet: {fileID: 7433441132597879392, guid: 5c475fb4fad4ab9468df2b772bc421c4, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
