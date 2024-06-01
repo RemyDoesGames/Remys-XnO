@@ -31,8 +31,8 @@ public class GameManager : MonoBehaviour
     public int circleWins;
     public int crossWins;
 
-    private bool StartRoundHasBeenCalled = false;
-    private bool GameStartHasBeenCalled = false;
+    private float timer;
+
     private PostProcessVolume blur;
 
     public RoundStatus currentRoundStatus;
@@ -40,9 +40,6 @@ public class GameManager : MonoBehaviour
 
     public GameObject[] field;
     public GameObject[] playerPrefab; // Circle is 0 - Cross is 1
-
-    // UI Game Objects
-
 
     private AudioManager audioManager;
     private AudioSource audioSource;
@@ -60,33 +57,15 @@ public class GameManager : MonoBehaviour
         blur = Camera.main.GetComponent<PostProcessVolume>();
         currentGameState = GameState.MainMenu;
         musicMuted = false;
+        timer = 0;
     }
 
     private void Update()
     {
-        
-        if (round == 5)
-        {
-            currentGameState = GameState.GameOver;
-        }
-
-        if (currentGameState == GameState.OnGoingGame && round != 5)
-        {
-            CheckWinConditions();
-        }
-
-        if (piecesPlaced == 9 && currentGameState == GameState.OnGoingGame)
-        {
-            currentRoundStatus = RoundStatus.Tie;
-            round++;
-            currentGameState = GameState.StandbyGame;
-        }
-
         switch (currentGameState)
         {
             case GameState.MainMenu:
-                
-                audioSource.volume = audioManager.FadeVolume(0.8f);
+                audioManager.FadeVolume(0.8f);
                 if (MainCameraAnimator.GetInteger("Phase") == 0)
                 {
                     MainCameraAnimator.SetInteger("Phase", 0);
@@ -99,16 +78,19 @@ public class GameManager : MonoBehaviour
                 break;
 
             case GameState.StandbyGame:
-                audioSource.volume = audioManager.FadeVolume(0.3f);
-                StartCoroutine(WaitStartRound(1));
+                audioManager.FadeVolume(0.3f);
                 blur.enabled = false;
+                if (WaitTimer(1))
+                {
+                    StartRound();
+                }
                 break;
 
             case GameState.OnGoingGame:
-                audioSource.volume = audioManager.FadeVolume(0.3f);
+                CheckWinConditions();
+                CheckRounds();
+                audioManager.FadeVolume(0.3f);
                 MainCameraAnimator.SetInteger("Phase", 1);
-                StartRoundHasBeenCalled = true;
-                GameStartHasBeenCalled = true;
                 blur.enabled = false;
                 break;
 
@@ -121,8 +103,8 @@ public class GameManager : MonoBehaviour
                 break;
             
             case GameState.GameOver:
-                audioSource.volume = audioManager.FadeVolume(0.3f);
-                StartCoroutine(WaitEndGame(1));
+                audioManager.FadeVolume(0.3f);
+                GameStart();
                 MainCameraAnimator.SetInteger("Phase", 2);
                 blur.enabled = false;
                 break;
@@ -131,11 +113,27 @@ public class GameManager : MonoBehaviour
         piecesPlaced = GameObject.FindGameObjectsWithTag("Player").Length;
     }
 
+    private void CheckRounds()
+    {
+        if (round == 5)
+        {
+            currentGameState = GameState.GameOver;
+        }
+    }
+
     private void ResetPlayers()
     {
         foreach (var player in GameObject.FindGameObjectsWithTag("Player"))
         {
             Destroy(player);
+        }
+    }
+
+    private void ResetFields()
+    {
+        for (int i = 0; i < field.Length; i++)
+        {
+            field[i].tag = "Field";
         }
     }
 
@@ -174,35 +172,25 @@ public class GameManager : MonoBehaviour
             round++;
             currentGameState = GameState.StandbyGame;
         }
-        
+        else if (piecesPlaced == 9)
+        {
+            currentRoundStatus = RoundStatus.Tie;
+            round++;
+            currentGameState = GameState.StandbyGame;
+        }
+
     }
 
     private bool CheckWinCondition(string symbol)
     {
-        return (field[0].tag == symbol && field[1].tag == symbol && field[2].tag == symbol) ||
-               (field[3].tag == symbol && field[4].tag == symbol && field[5].tag == symbol) ||
-               (field[6].tag == symbol && field[7].tag == symbol && field[8].tag == symbol) ||
-               (field[0].tag == symbol && field[3].tag == symbol && field[6].tag == symbol) ||
-               (field[1].tag == symbol && field[4].tag == symbol && field[7].tag == symbol) ||
-               (field[2].tag == symbol && field[5].tag == symbol && field[8].tag == symbol) ||
-               (field[0].tag == symbol && field[4].tag == symbol && field[8].tag == symbol) ||
-               (field[2].tag == symbol && field[4].tag == symbol && field[6].tag == symbol);
-    }
-
-    private IEnumerator WaitStartRound(float time)
-    {
-        StartRoundHasBeenCalled = false;
-        yield return new WaitForSeconds(time);
-        StartRound();
-    }
-    private IEnumerator WaitEndGame(float time)
-    {
-        GameStartHasBeenCalled = false;
-        yield return new WaitForSeconds(time);
-        if (!GameStartHasBeenCalled)
-        {
-            GameStartHasBeenCalled = true;
-        }
+        return (field[0].CompareTag(symbol) && field[1].CompareTag(symbol) && field[2].CompareTag(symbol)) ||
+               (field[3].CompareTag(symbol) && field[4].CompareTag(symbol) && field[5].CompareTag(symbol)) ||
+               (field[6].CompareTag(symbol) && field[7].CompareTag(symbol) && field[8].CompareTag(symbol)) ||
+               (field[0].CompareTag(symbol) && field[3].CompareTag(symbol) && field[6].CompareTag(symbol)) ||
+               (field[1].CompareTag(symbol) && field[4].CompareTag(symbol) && field[7].CompareTag(symbol)) ||
+               (field[2].CompareTag(symbol) && field[5].CompareTag(symbol) && field[8].CompareTag(symbol)) ||
+               (field[0].CompareTag(symbol) && field[4].CompareTag(symbol) && field[8].CompareTag(symbol)) ||
+               (field[2].CompareTag(symbol) && field[4].CompareTag(symbol) && field[6].CompareTag(symbol));
     }
 
     public void SpawnPlayer(Vector3 dropOffset, Vector3 position)
@@ -224,26 +212,19 @@ public class GameManager : MonoBehaviour
 
     public void StartRound()
     {
-        
-        if (!StartRoundHasBeenCalled)
-        {
-            ResetPlayers(); 
-            SetTurn(); 
-            currentGameState = GameState.OnGoingGame; 
-        }
+        ResetPlayers(); 
+        SetTurn();
+        ResetFields();
+        currentGameState = GameState.OnGoingGame; 
     }
 
     public void GameStart()
     {
-        if (!GameStartHasBeenCalled)
-        {
-            currentGameState = GameState.StandbyGame;
-            MainCameraAnimator.SetInteger("Phase", 1); 
-            round = 0;
-            circleWins = 0;
-            crossWins = 0; 
-            StartRound();
-        }
+        MainCameraAnimator.SetInteger("Phase", 1);
+        round = 0;
+        circleWins = 0;
+        crossWins = 0;
+        currentGameState = GameState.StandbyGame;
     }
 
     public void Setttings()
@@ -260,13 +241,27 @@ public class GameManager : MonoBehaviour
     public void PausedGame()
     {
         currentGameState = GameState.PausedGame;
-        GameStartHasBeenCalled = false;
-        StartRoundHasBeenCalled = false;
     }
 
     public void ResumeGame()
     {
         currentGameState = GameState.OnGoingGame;
+    }
+
+    private bool WaitTimer(float sec)
+    {
+        Debug.Log(timer);
+        timer += Time.deltaTime;
+        if (timer > sec)
+        {
+            timer = 0;
+            return true;
+            
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public enum RoundStatus

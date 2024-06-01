@@ -30,15 +30,15 @@ public class AudioManager : MonoBehaviour
         s.source.Play();
     }
 
-    public float FadeVolume(float vol)
+    public void FadeVolume(float vol)
     {
         if (GameManager.Instance.musicMuted)
         {
-            return 0;
+            audioSource.volume = 0;
         }
         else
         {
-            return Mathf.Lerp(audioSource.volume, vol, Time.deltaTime);
+            audioSource.volume = Mathf.Lerp(audioSource.volume, vol, Time.deltaTime);
         }
     }
 }

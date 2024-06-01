@@ -14,12 +14,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.Instance.currentGameState == GameManager.GameState.StandbyGame)
+        if (gameObject.CompareTag("Field"))
         {
-            gameObject.tag = "Field";
-            meshRenderer.enabled = false;
             fieldEmpty = true;
-            mousePressed = false;
         }
     }
 
@@ -62,4 +59,5 @@ public class PlayerController : MonoBehaviour
 
         mousePressed = false;
     }
+
 }
